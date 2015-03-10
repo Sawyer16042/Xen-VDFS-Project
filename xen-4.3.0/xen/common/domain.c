@@ -1154,7 +1154,7 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
 	//((10^9 << 32) / tsc_to_system_mul) >> tsc_shift
     }
 
-
+    //set function - not tested
     case VCPUOP_set_target_freq:
     {
 	struct csched_dom *sdom;
