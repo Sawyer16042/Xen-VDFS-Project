@@ -98,7 +98,6 @@ static int show_cpuinfo(struct seq_file *m, void *v)
 		//HYPERVISOR_vcpu_op(VCPUOP_set_target_freq,
                 //                  cpu, &(count));
 		//count = (int)(count * .9);//makes the guest slower each time the code runs
-		printk(KERN_EMERG "The muliply factor is %d", count);
 	}
 
 	/* Cache size */
