@@ -61,6 +61,18 @@ struct domain *domain_list;
 
 struct domain *dom0;
 
+struct csched_dom {
+    struct list_head active_vcpu;
+    struct list_head active_sdom_elem;
+    struct domain *dom;
+    /* cpumask translated from the domain's node-affinity.
+ *      * Basically, the CPUs we prefer to be scheduled on. */
+    cpumask_var_t node_affinity_cpumask;
+    uint16_t active_vcpu_count;
+    uint16_t weight;
+    uint16_t cap;
+};
+
 struct vcpu *idle_vcpu[NR_CPUS] __read_mostly;
 
 vcpu_info_t dummy_vcpu_info;
@@ -1149,22 +1161,23 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
 	if (u.tsc_shift < 0)
         	rc = freq << -u.tsc_shift;
     	else
-        	rc  = freq>> u.tsc_shift;
+        	rc  = freq >> u.tsc_shift;
 	
 	//((10^9 << 32) / tsc_to_system_mul) >> tsc_shift
+	break;
     }
 
     //set function - not tested
     case VCPUOP_set_target_freq:
     {
 	struct csched_dom *sdom;
-	int ratio;
+	uint16_t ratio;
 	if (copy_from_guest(&ratio, arg, 1))
 		return -EFAULT;
 
 	sdom = ((struct csched_dom *) (d)->sched_priv);
-	sdom->cap = ratio; 
-	
+	sdom->cap = ratio;
+        break;
     }
 
 #ifdef VCPU_TRAP_NMI

@@ -60,6 +60,7 @@ static int show_cpuinfo(struct seq_file *m, void *v)
 	struct cpuinfo_x86 *c = v;
 	unsigned int cpu;
 	int i;
+	//static int count = 100;
 
 	cpu = c->cpu_index;
 	seq_printf(m, "processor\t: %u\n"
@@ -95,7 +96,9 @@ static int show_cpuinfo(struct seq_file *m, void *v)
 
 		//test for set function: not fully implemented
 		//HYPERVISOR_vcpu_op(VCPUOP_set_target_freq,
-                //                  cpu, (freq - 1000));
+                //                  cpu, &(count));
+		//count = (int)(count * .9);//makes the guest slower each time the code runs
+		printk(KERN_EMERG "The muliply factor is %d", count);
 	}
 
 	/* Cache size */
