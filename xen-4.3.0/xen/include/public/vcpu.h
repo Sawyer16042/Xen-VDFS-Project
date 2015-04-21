@@ -192,6 +192,10 @@ DEFINE_XEN_GUEST_HANDLE(vcpu_register_vcpu_info_t);
 
 #define VCPUOP_set_target_freq      15
 
+#define VCPUOP_get_capped_freq      16
+
+#define VCPUOP_sleep		    17
+
 /* Send an NMI to the specified VCPU. @extra_arg == NULL. */
 #define VCPUOP_send_nmi             11
 

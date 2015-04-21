@@ -60,7 +60,8 @@ static int show_cpuinfo(struct seq_file *m, void *v)
 	struct cpuinfo_x86 *c = v;
 	unsigned int cpu;
 	int i;
-	//static int count = 100;
+        int ratio = 0;
+        unsigned int runningFreq = 0;
 
 	cpu = c->cpu_index;
 	seq_printf(m, "processor\t: %u\n"
@@ -84,20 +85,26 @@ static int show_cpuinfo(struct seq_file *m, void *v)
 	if (cpu_has(c, X86_FEATURE_TSC)) {
 		unsigned int freq = cpufreq_quick_get(cpu);
                 
-		//Placeholder until module is in place
-		if (!freq)
+		//display cpu speed data
+		if (!freq){
 			freq = HYPERVISOR_vcpu_op(VCPUOP_get_target_freq,
                                   cpu, NULL);
+                        runningFreq = HYPERVISOR_vcpu_op(VCPUOP_get_capped_freq,
+                                  cpu, NULL);
+                        ratio = (int)(((double)runningFreq / (double)freq) * 100.0);
+                }
 
 		if (!freq)
 			freq = cpu_khz;
-		seq_printf(m, "cpu MHz\t\t: %u.%03u\n",
+		seq_printf(m, "Max cpu MHz\t: %u.%03u\n",
 			   freq / 1000, (freq % 1000));
 
-		//test for set function: not fully implemented
-		//HYPERVISOR_vcpu_op(VCPUOP_set_target_freq,
-                //                  cpu, &(count));
-		//count = (int)(count * .9);//makes the guest slower each time the code runs
+                seq_printf(m, "Cpu MHz\t\t: %u.%03u\n",
+                           runningFreq / 1000, (runningFreq % 1000));
+
+                seq_printf(m, "CPU Ratio\t: %d\n",
+                           ratio);
+
 	}
 
 	/* Cache size */

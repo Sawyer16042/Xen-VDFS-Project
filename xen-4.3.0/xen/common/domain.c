@@ -71,6 +71,7 @@ struct csched_dom {
     uint16_t active_vcpu_count;
     uint16_t weight;
     uint16_t cap;
+    uint16_t sleep;
 };
 
 struct vcpu *idle_vcpu[NR_CPUS] __read_mostly;
@@ -1034,6 +1035,7 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
     case VCPUOP_down:
         if ( !test_and_set_bit(_VPF_down, &v->pause_flags) )
             vcpu_sleep_nosync(v);
+	printk(KERN_EMERG "ASFOHJAFIDISOUUGFISADOUGFY");
         break;
 
     case VCPUOP_is_up:
@@ -1163,11 +1165,12 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
     	else
         	rc  = freq >> u.tsc_shift;
 	
+	//this code is based on the following formula:	
 	//((10^9 << 32) / tsc_to_system_mul) >> tsc_shift
 	break;
     }
 
-    //set function - not tested
+    //set function
     case VCPUOP_set_target_freq:
     {
 	struct csched_dom *sdom;
@@ -1178,6 +1181,44 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
 	sdom = ((struct csched_dom *) (d)->sched_priv);
 	sdom->cap = ratio;
         break;
+    }
+
+    //get effective frequency
+    case VCPUOP_get_capped_freq:
+    {
+	struct csched_dom *sdom;
+        uint16_t ratio;
+	long max, temp;
+
+	sdom = ((struct csched_dom *) (d)->sched_priv);
+        ratio = sdom->cap;  
+	if(ratio == 0 && sdom->sleep == 0){
+		ratio = 100;
+	}
+
+	//make another call to do_vpu_op to avoid re-writting code
+	//arg reused since neither function accept arguements
+	//see the VCPUOP_get_target_freq for more information on the
+		//implementation     
+	max = do_vcpu_op(VCPUOP_get_target_freq, vcpuid, arg);
+        //Linux does not provide floating point support at this level
+        temp = max * ratio;
+	rc = (u64)(temp / 100);
+        break;
+    }		
+
+    case VCPUOP_sleep:
+    {
+      struct csched_dom *sdom;
+      uint16_t sleepVal;
+
+      printk(KERN_EMERG "Sleepy sleepy!\n");
+      
+      sdom = ((struct csched_dom *) (d)->sched_priv);
+      if (copy_from_guest(&sleepVal, arg, 1))
+                return -EFAULT;
+	
+       sdom->sleep = sleepVal;
     }
 
 #ifdef VCPU_TRAP_NMI
