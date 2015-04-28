@@ -1152,7 +1152,15 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
     {
         struct vcpu_info *vinfo;
         struct vcpu_time_info u;
-	u64 freq, CONST = 1000000ULL << 32;	
+	unsigned int ratio;
+        //unsigned long long total;
+        uint64_t total = 0;
+	uint64_t runi, runa, bloc, ofln;
+	long speed;
+
+	//calculate the current frequency
+	u64 freq, CONST = 1000000ULL << 32;
+	
 	if ( v->vcpu_info == &dummy_vcpu_info )
             return -EINVAL;
 	
@@ -1161,10 +1169,29 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
 	freq = u.tsc_to_system_mul;
 	freq = CONST/freq;
 	if (u.tsc_shift < 0)
-        	rc = freq << -u.tsc_shift;
+        	speed = freq << -u.tsc_shift;
     	else
-        	rc  = freq >> u.tsc_shift;
+        	speed  = freq >> u.tsc_shift;
 	
+	//begin ratio calculations
+	runi = v->avg_runstate.time[RUNSTATE_running] / 100;
+    	runa = v->avg_runstate.time[RUNSTATE_runnable] / 100;
+	bloc = v->avg_runstate.time[RUNSTATE_blocked] / 100;
+	ofln = v->avg_runstate.time[RUNSTATE_offline] / 100;
+    	total = runi + runa + ofln;
+
+	//large values multiplied to ratio to increase accuracy
+        ratio = (runi * 1000000000) / total;
+
+    	if (total == 0)
+                total = 1000000000;
+    	if (ratio == 0)
+          ratio = 10000000;
+    	//if (ratio > 10000000)
+        //    ratio = 10000000;
+
+	rc = (speed * ratio)/ 1000000000;
+
 	//this code is based on the following formula:	
 	//((10^9 << 32) / tsc_to_system_mul) >> tsc_shift
 	break;

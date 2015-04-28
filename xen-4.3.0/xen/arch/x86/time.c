@@ -810,14 +810,14 @@ static void __update_vcpu_system_time(struct vcpu *v, int force)
     struct domain *d = v->domain;
     s_time_t tsc_stamp = 0;
     /* mod by Jia */
-    unsigned int ratio;
-    unsigned long long total;
+    //unsigned int ratio;
+    //unsigned long long total;
+    //unsigned long long runi, runa, bloc, ofln;
     uint32_t tsc_to_system_mul;
     int8_t   tsc_shift;
     u64 tsc_khz = 1000000ULL << 32;
     u64 freq_hz;
-    //static uint32_t BLARG = 0;
-
+    //static uint32_t HONK = 0;
 
     if ( v->vcpu_info == NULL )
         return;
@@ -852,15 +852,43 @@ static void __update_vcpu_system_time(struct vcpu *v, int force)
     memset(&_u, 0, sizeof(_u));
     memset(&_t, 0, sizeof(_t));
 
-    total = v->avg_runstate.time[RUNSTATE_running] + v->avg_runstate.time[RUNSTATE_runnable];
+    //total = (v->avg_runstate.time[RUNSTATE_running] / 100) + (v->avg_runstate.time[RUNSTATE_runnable] / 100) + (v->avg_runstate.time[RUNSTATE_blocked] / 100) + (v->avg_runstate.time[RUNSTATE_offline] / 100);
+
+    /*runi = v->avg_runstate.time[RUNSTATE_running];
+    runa = v->avg_runstate.time[RUNSTATE_runnable];
+    bloc = v->avg_runstate.time[RUNSTATE_blocked];
+    ofln = v->avg_runstate.time[RUNSTATE_offline];
+
+    do_div(runi, 100);
+    do_div(runa, 100);
+    do_div(bloc, 100);
+    do_div(ofln, 100);
+
+    total = runi + runa + bloc + ofln;
+ 
+    if(v->avg_runstate.time[RUNSTATE_offline] != 0){
+	printk(KERN_EMERG "Gamzee says RUNNING is %" PRIu64 "\n", v->avg_runstate.time[RUNSTATE_running]);
+        printk(KERN_EMERG "Gamzee says RUNNABLE is %" PRIu64 "\n", v->avg_runstate.time[RUNSTATE_runnable]);
+        printk(KERN_EMERG "Gamzee says OFFLINE is %" PRIu64 "\n", v->avg_runstate.time[RUNSTATE_offline]);
+        printk(KERN_EMERG "Gamzee says BLOCKED is %" PRIu64 "\n", v->avg_runstate.time[RUNSTATE_blocked]);
+     }
+//        total += v->avg_runstate.time[RUNSTATE_offline];
+        //total += v->avg_runstate.time[RUNSTATE_blocked];
+
     if (total == 0)
                 total = 100;
+    //HONK++;
+    //HONK = HONK % 500;
+    //total += (HONK * 4000);
 
-    ratio = 100 * v->avg_runstate.time[RUNSTATE_running] / total;
+    //ratio = *100 * v->avg_runstate.time[RUNSTATE_running] / total;
+    ratio = runi;
+    do_div(ratio, total);
+
     if (ratio == 0)
           ratio = 100;
     if (ratio > 100)
-            ratio = 100;
+            ratio = 101;*/
                 //_u.tsc_to_system_mul = div_frac(mul_frac(t->tsc_scale.mul_frac, (u32)100), (u32)ratio);
     tsc_to_system_mul = t->tsc_scale.mul_frac;
     tsc_shift         = (s8)t->tsc_scale.shift;
@@ -870,9 +898,9 @@ static void __update_vcpu_system_time(struct vcpu *v, int force)
     else
         tsc_khz >>= tsc_shift;
     freq_hz = tsc_khz * 1000ULL;
-    freq_hz = freq_hz * (u64)ratio;
+    //freq_hz = freq_hz * (u64)ratio;                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA FIX MEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEe
     //printk("freq: %llu\n", (unsigned long long )freq_hz);
-    do_div(freq_hz, 100);
+    //do_div(freq_hz, 100);
     //printk("after div freq: %llu\n", (unsigned long long)freq_hz);
     set_time_scale(&_t.tsc_scale, freq_hz);
     //printk("after set_scale freq: %llu\n", (unsigned long long)freq_hz);
@@ -882,7 +910,7 @@ static void __update_vcpu_system_time(struct vcpu *v, int force)
     	tsc_khz <<= -(s8)_t.tsc_scale.shift;
     else
    	tsc_khz >>= (s8)_t.tsc_scale.shift;
-
+	
 
     if ( d->arch.vtsc )
     {
