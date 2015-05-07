@@ -1148,14 +1148,14 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
     }
 
     //New Hypercalls
-    case VCPUOP_get_target_freq:
+    case VCPUOP_get_dynamic_freq:
     {
         struct vcpu_info *vinfo;
         struct vcpu_time_info u;
 	unsigned int ratio;
         //unsigned long long total;
         uint64_t total = 0;
-	uint64_t runi, runa, bloc, ofln;
+	uint64_t runi, runa, ofln, bloc;
 	long speed;
 
 	//calculate the current frequency
@@ -1176,10 +1176,15 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
 	//begin ratio calculations
 	runi = v->avg_runstate.time[RUNSTATE_running] / 100;
     	runa = v->avg_runstate.time[RUNSTATE_runnable] / 100;
-	bloc = v->avg_runstate.time[RUNSTATE_blocked] / 100;
 	ofln = v->avg_runstate.time[RUNSTATE_offline] / 100;
-    	total = runi + runa + ofln;
+    	bloc = v->avg_runstate.time[RUNSTATE_blocked] / 100;
+	total = runi + runa + ofln + bloc;
 
+	/*printk(KERN_EMERG "Gamzee says that runi is %" PRIu64 "\n", runi);
+        printk(KERN_EMERG "Gamzee says that runa is %" PRIu64 "\n", runa);
+        printk(KERN_EMERG "Gamzee says that ofln is %" PRIu64 "\n", ofln);
+        printk(KERN_EMERG "Gamzee says that total is %" PRIu64 "\n", total);
+	*/
 	//large values multiplied to ratio to increase accuracy
         ratio = (runi * 1000000000) / total;
 
@@ -1187,9 +1192,7 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
                 total = 1000000000;
     	if (ratio == 0)
           ratio = 10000000;
-    	//if (ratio > 10000000)
-        //    ratio = 10000000;
-
+    	
 	rc = (speed * ratio)/ 1000000000;
 
 	//this code is based on the following formula:	
@@ -1208,44 +1211,6 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
 	sdom = ((struct csched_dom *) (d)->sched_priv);
 	sdom->cap = ratio;
         break;
-    }
-
-    //get effective frequency
-    case VCPUOP_get_capped_freq:
-    {
-	struct csched_dom *sdom;
-        uint16_t ratio;
-	long max, temp;
-
-	sdom = ((struct csched_dom *) (d)->sched_priv);
-        ratio = sdom->cap;  
-	if(ratio == 0 && sdom->sleep == 0){
-		ratio = 100;
-	}
-
-	//make another call to do_vpu_op to avoid re-writting code
-	//arg reused since neither function accept arguements
-	//see the VCPUOP_get_target_freq for more information on the
-		//implementation     
-	max = do_vcpu_op(VCPUOP_get_target_freq, vcpuid, arg);
-        //Linux does not provide floating point support at this level
-        temp = max * ratio;
-	rc = (u64)(temp / 100);
-        break;
-    }		
-
-    case VCPUOP_sleep:
-    {
-      struct csched_dom *sdom;
-      uint16_t sleepVal;
-
-      printk(KERN_EMERG "Sleepy sleepy!\n");
-      
-      sdom = ((struct csched_dom *) (d)->sched_priv);
-      if (copy_from_guest(&sleepVal, arg, 1))
-                return -EFAULT;
-	
-       sdom->sleep = sleepVal;
     }
 
 #ifdef VCPU_TRAP_NMI

@@ -170,6 +170,10 @@ struct vcpu_register_vcpu_info {
 };
 DEFINE_GUEST_HANDLE_STRUCT(vcpu_register_vcpu_info);
 
+#define VCPUOP_get_dynamic_freq      14
+
+#define VCPUOP_set_target_freq      15
+
 /* Send an NMI to the specified VCPU. @extra_arg == NULL. */
 #define VCPUOP_send_nmi             11
 #endif /* __XEN_PUBLIC_VCPU_H__ */

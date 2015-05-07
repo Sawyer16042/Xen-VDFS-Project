@@ -84,25 +84,22 @@ static int show_cpuinfo(struct seq_file *m, void *v)
 
 	if (cpu_has(c, X86_FEATURE_TSC)) {
 		unsigned int freq = cpufreq_quick_get(cpu);
-                
+               
+                if (!freq)
+                        freq = cpu_khz;
+ 
 		//display cpu speed data
-		if (!freq){
-			freq = HYPERVISOR_vcpu_op(VCPUOP_get_target_freq,
-                                  cpu, NULL);
-                        runningFreq = HYPERVISOR_vcpu_op(VCPUOP_get_capped_freq,
-                                  cpu, NULL);
-                        ratio = (int)(((double)runningFreq / (double)freq) * 100.0);
-                }
+		runningFreq = HYPERVISOR_vcpu_op(VCPUOP_get_dynamic_freq,
+                           cpu, NULL);
+                ratio = (int)(((double)runningFreq / (double)freq) * 100.0);
 
-		if (!freq)
-			freq = cpu_khz;
 		seq_printf(m, "Max cpu MHz\t: %u.%03u\n",
 			   freq / 1000, (freq % 1000));
 
                 seq_printf(m, "Cpu MHz\t\t: %u.%03u\n",
                            runningFreq / 1000, (runningFreq % 1000));
 
-                seq_printf(m, "CPU Ratio\t: %d\n",
+                seq_printf(m, "CPU Usage\t: %d%%\n",
                            ratio);
 
 	}

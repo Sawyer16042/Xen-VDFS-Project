@@ -1,11 +1,3 @@
-Xen VDFS Project
-----------------
-Guest OS code:
-vdfs-cpufreq.c		(to be put in drivers/cpufreq/vdfs-cpufreq.c)
-processor.h		(to be put in include/vdfs/processor.h)
-
-Hypervisor code:
-domain.c		(to be put in xen/common/domain.c)
-compat_domain.c		(to be put in xen/common/compat/domain.c)
-vcpu.h			(to be put in include/public/vcpu.h)
-
+Xen VDFS Patch
+Dynamically change the readout in /proc/cpuinfo to match the affective speed based on resource allocation
+Added the set_freq syscal to the guest system (code for dom0 given, but it can run on all guest types) to change how much of the guests resources it can use.
