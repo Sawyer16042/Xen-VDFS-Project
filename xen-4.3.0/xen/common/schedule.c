@@ -154,6 +154,8 @@ static inline void vcpu_runstate_change(
     {
         v->runstate.time[v->runstate.state] += delta;
         v->runstate.state_entry_time = new_entry_time;
+	//Modified by Sawyer
+	//This calcualtes the running average allocation
 	v->avg_runstate.time[v->runstate.state] = ((v->runstate.time[v->runstate.state] * 7) + delta)/8;
     }
 

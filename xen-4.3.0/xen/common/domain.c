@@ -1147,7 +1147,10 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
         break;
     }
 
-    //New Hypercalls
+    /*Modified by Sawyer
+     *
+     * This determines the functional frequency based on the usage
+     */ 
     case VCPUOP_get_dynamic_freq:
     {
         struct vcpu_info *vinfo;
@@ -1158,7 +1161,10 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
 	uint64_t runi, runa, ofln, bloc;
 	long speed;
 
-	//calculate the current frequency
+	//calculate the max speed
+	//this code is based on the following formula:  
+	//((10^9 << 32) / tsc_to_system_mul) >> tsc_shift
+	
 	u64 freq, CONST = 1000000ULL << 32;
 	
 	if ( v->vcpu_info == &dummy_vcpu_info )
@@ -1173,34 +1179,36 @@ long do_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
     	else
         	speed  = freq >> u.tsc_shift;
 	
-	//begin ratio calculations
+	//obtain values for different runstate allocations
+	//divided by 100 to prevent overflow
+	//the 100's cancel out (runi / 100)/(total / 100) = runi / total
 	runi = v->avg_runstate.time[RUNSTATE_running] / 100;
     	runa = v->avg_runstate.time[RUNSTATE_runnable] / 100;
 	ofln = v->avg_runstate.time[RUNSTATE_offline] / 100;
     	bloc = v->avg_runstate.time[RUNSTATE_blocked] / 100;
 	total = runi + runa + ofln + bloc;
 
-	/*printk(KERN_EMERG "Gamzee says that runi is %" PRIu64 "\n", runi);
-        printk(KERN_EMERG "Gamzee says that runa is %" PRIu64 "\n", runa);
-        printk(KERN_EMERG "Gamzee says that ofln is %" PRIu64 "\n", ofln);
-        printk(KERN_EMERG "Gamzee says that total is %" PRIu64 "\n", total);
-	*/
+	if (total == 0) //bounds checking
+          total = 1;
+
+
 	//large values multiplied to ratio to increase accuracy
+	//technically this is the percentage * 10000000
         ratio = (runi * 1000000000) / total;
-
-    	if (total == 0)
-                total = 1000000000;
+	
+	//bounds checking
     	if (ratio == 0)
-          ratio = 10000000;
+          ratio = 1000000000;
     	
+	//apply ratio to the max speed
 	rc = (speed * ratio)/ 1000000000;
-
-	//this code is based on the following formula:	
-	//((10^9 << 32) / tsc_to_system_mul) >> tsc_shift
 	break;
     }
 
-    //set function
+    /*Modified by Sawyer
+     *
+     *This changes the cap value to the value given to the hypercall
+     */
     case VCPUOP_set_target_freq:
     {
 	struct csched_dom *sdom;

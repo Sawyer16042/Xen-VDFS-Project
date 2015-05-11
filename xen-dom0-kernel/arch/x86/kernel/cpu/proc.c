@@ -88,7 +88,12 @@ static int show_cpuinfo(struct seq_file *m, void *v)
                 if (!freq)
                         freq = cpu_khz;
  
-		//display cpu speed data
+		
+		/*Modified by Sawyer
+ 		 *
+ 		 *The code now prents the system maximum, the effective maximum,
+		 *and the ratio between the two
+ 		 */ 
 		runningFreq = HYPERVISOR_vcpu_op(VCPUOP_get_dynamic_freq,
                            cpu, NULL);
                 ratio = (int)(((double)runningFreq / (double)freq) * 100.0);

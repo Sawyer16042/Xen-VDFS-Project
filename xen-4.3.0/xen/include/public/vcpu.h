@@ -188,6 +188,8 @@ struct vcpu_register_vcpu_info {
 typedef struct vcpu_register_vcpu_info vcpu_register_vcpu_info_t;
 DEFINE_XEN_GUEST_HANDLE(vcpu_register_vcpu_info_t);
 
+//Modified by Sawyer
+//These are the headers for the two custom hypercalls
 #define VCPUOP_get_dynamic_freq      14
 
 #define VCPUOP_set_target_freq      15

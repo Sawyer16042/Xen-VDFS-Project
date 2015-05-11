@@ -170,6 +170,8 @@ struct vcpu_register_vcpu_info {
 };
 DEFINE_GUEST_HANDLE_STRUCT(vcpu_register_vcpu_info);
 
+//Modified by Sawyer
+//These are the headers for the two custom hypercalls
 #define VCPUOP_get_dynamic_freq      14
 
 #define VCPUOP_set_target_freq      15
