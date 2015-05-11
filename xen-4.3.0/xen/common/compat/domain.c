@@ -73,6 +73,9 @@ int compat_vcpu_op(int cmd, int vcpuid, XEN_GUEST_HANDLE_PARAM(void) arg)
     case VCPUOP_stop_periodic_timer:
     case VCPUOP_stop_singleshot_timer:
     case VCPUOP_register_vcpu_info:
+    /*Modified by Sawyer
+     *Aded this for consistancy
+     */
     case VCPUOP_get_dynamic_freq:
     case VCPUOP_set_target_freq:
     case VCPUOP_send_nmi:

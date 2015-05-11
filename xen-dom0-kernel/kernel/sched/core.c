@@ -7994,14 +7994,11 @@ void dump_cpu_task(int cpu)
 	sched_show_task(cpu_curr(cpu));
 }
 
-/**
- *  * sys_set_freq - set the cpu frequency
- *   * @freq: target frequency of the user
- *      *
- *       * Return: 0 on success.
+/*Modified by Sawyer
  *
- * Potential to add in a cpu variable to the system call
- *        */
+ * This syscal acts as a in-between stage of the guest and the raw set hypercall
+ * It accepts a target speed as an input
+ */ 
 SYSCALL_DEFINE1(set_freq, int, freq)
 {
   int ratio = 0, max = 1, cpu = 0;

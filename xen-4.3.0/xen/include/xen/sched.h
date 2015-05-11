@@ -114,8 +114,9 @@ struct vcpu
     void            *sched_priv;    /* scheduler-specific data */
 
     struct vcpu_runstate_info runstate;
-    //Modified by Sawyer
-    //header for average allocation
+    /*Modified by Sawyer
+     *header for average allocation
+     */
     struct vcpu_runstate_info avg_runstate;
 #ifndef CONFIG_COMPAT
 # define runstate_guest(v) ((v)->runstate_guest)
